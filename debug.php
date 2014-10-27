@@ -33,7 +33,7 @@
     function printhtmlspecialchars( $a ) {
         $r = array( );
         foreach ( $a as $kk => $vv ) {
-            $r[ $kk ] = htmlspecialchars( $vv );
+            $r[ $kk ] = htmlspecialchars( $vv , ENT_QUOTES );
         }
         printr( $r );
     }
