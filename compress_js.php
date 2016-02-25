@@ -37,5 +37,5 @@
             }
         }
     }
-    echo "<hr>Saved " . number_format( $savedt / 1024, 2 ) . 'kb';
+    echo "<hr>Saved " . number_format( $savedt / 1000, 2 ) . 'Kb';
 ?>
