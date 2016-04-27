@@ -5,7 +5,17 @@
         'password',
         'database' 
     );
-    $DB = mysqli_connect( $DBS[ 0 ], $DBS[ 1 ], $DBS[ 2 ], $DBS[ 3 ] ) or die( "Error " . mysqli_error( $DB ) );
+    $DB  = new mysqli( $DBS[ 0 ], $DBS[ 1 ], $DBS[ 2 ], $DBS[ 3 ] );
+    if ( $DB->connect_errno == 1049 ) {
+        $DB  = new mysqli( $DBS[ 0 ], $DBS[ 1 ], $DBS[ 2 ] );
+        $sql = "CREATE DATABASE `" . $DBS[ 3 ] . "`;";
+        $DB->query( $sql ) or die( "You had No DATABASE, I tried to make it for you but failed<br>Pleas make `" . $DBS[ 3 ] . "` and refresh this page" );
+        exit( "You had No DATABASE, I made it for you, refresh the page" );
+    }
+    if ( $DB === false ) {
+        die( "Error Z\n" . "\n\n" . print_r( $DB, true ) . "<br>\n" . __FILE__ . '@' . __LINE__ );
+    }
+    $DB->query( 'SET NAMES utf8' );
     function d_i( $s ) {
         // data in
         global $DB;
@@ -33,5 +43,18 @@
             echo "\n<br>Error: " . $mysqli->error;
             $DB = mysqli_connect( $DBS[ 0 ], $DBS[ 1 ], $DBS[ 2 ], $DBS[ 3 ] ) or die( "Error " . mysqli_error( $DB ) );
         }
+    }
+    function d_o( $s ) {
+        return htmlspecialchars( $s, ENT_QUOTES );
+    }
+    function insert_array( $t, $a ) {
+        return "INSERT INTO `" . $t . "` (`" . implode( "`, `", array_keys( $a ) ) . "`) VALUES (" . implode( ",", $a ) . ");";
+    }
+    function update_array( $t, $a, $wh ) {
+        $aa = array( );
+        foreach ( $a as $kk => $vv ) {
+            $aa[ ] = "`" . $kk . "` = " . $vv;
+        }
+        return "UPDATE `" . $t . "` SET " . implode( " , ", $aa ) . " WHERE " . $wh . ";";
     }
 ?>
