@@ -12,6 +12,9 @@
         $DB->query( $sql ) or die( "You had No DATABASE, I tried to make it for you but failed<br>Pleas make `" . $DBS[ 3 ] . "` and refresh this page" );
         exit( "You had No DATABASE, I made it for you, refresh the page" );
     }
+    if ( $DB->connect_errno !== 0 ) {
+        die( 'Connect Error: ' . $DB->connect_errno . " : " . $DB->connect_error );
+    }
     if ( $DB === false ) {
         die( "Error Z\n" . "\n\n" . print_r( $DB, true ) . "<br>\n" . __FILE__ . '@' . __LINE__ );
     }
