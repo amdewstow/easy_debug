@@ -67,11 +67,12 @@
             if ( $zip4 != null ) {
                 $rr[ 'Zip' ] .= '-' . $zip4;
             }
-            $rr[ 'County' ]   = $county;
-            $rr[ 'Country' ]  = $country;
-            $rr[ 'RAW_URL' ]  = $resp[ 'RAW_URL' ];
-            $rr[ 'C_F' ]      = $resp[ 'C_F' ];
-            $rr[ 'Formated' ] = $street_number . ' ' . $street_name . "\n<br>" . $city . ', ' . $state . ' ' . $rr[ 'Zip' ] . "\n<br>" . $county;
+            $rr[ 'County' ]        = $county;
+            $rr[ 'Country' ]       = $country;
+            $rr[ 'RAW_URL' ]       = $resp[ 'RAW_URL' ];
+            $rr[ 'C_F' ]           = $resp[ 'C_F' ];
+            $rr[ 'Formated' ]      = $street_number . ' ' . $street_name . "\n<br>" . $city . ', ' . $state . ' ' . $rr[ 'Zip' ];
+            $rr[ 'Formated_Full' ] = $street_number . ' ' . $street_name . "\n<br>" . $city . ', ' . $state . ' ' . $rr[ 'Zip' ] . "\n<br>" . $country;
             return $rr;
         } else {
             return false;
