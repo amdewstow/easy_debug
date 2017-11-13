@@ -53,6 +53,7 @@
     }
     $template_dir = "./_templates/";
     function load_template( $ff, $bk = false ) {
+        //file name as string
         global $template_dir;
         if ( ( $bk === 1 ) || ( $bk === true ) ) {
             //load one lower
@@ -82,6 +83,7 @@
         return $r;
     }
     function clean_tempalte( $s ) {
+        //html string
         global $_js_ver;
         $before             = strlen( $s );
         $ars                = array( );
@@ -124,6 +126,7 @@
         return $s;
     }
     function smart_template( $s, $ar, $looped = false ) {
+        //html string, array
         $st = microtime( true );
         global $_HOST_;
         global $_IMG_;
@@ -167,6 +170,24 @@
         } else {
             return $s;
         }
+    }
+    function multi_implode( $glue, $array ) {
+        $out = "";
+        foreach ( $array as $item ) {
+            if ( is_array( $item ) ) {
+                if ( empty( $out ) ) {
+                    $out = multi_implode( $glue, $item );
+                } else {
+                    $out .= $glue . multi_implode( $glue, $item );
+                }
+            } else {
+                if ( empty( $out ) )
+                    $out = $item;
+                else
+                    $out .= $glue . $item;
+            }
+        }
+        return $out;
     }
     function ulli_implode( $a ) {
         return '<ul><li>' . implode( '</li><li>', $a ) . '</li></ul>';
