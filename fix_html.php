@@ -35,6 +35,8 @@
                                 echo "\n<br>" . $fz;
                                 $cleand = $ii->indent( file_get_contents( $fz ) );
                                 file_put_contents( $fz, $cleand );
+                            } else {
+                                die( "Can not write to " . $fz );
                             }
                         }
                     }
