@@ -51,34 +51,71 @@
         //12-345678
         return preg_replace( "/^(\d{2})(\d{7})$/", "$1-$2", $ssn );
     }
+    $template_dir = "./_templates/";
+    function load_template( $ff, $bk = false ) {
+        global $template_dir;
+        if ( ( $bk === 1 ) || ( $bk === true ) ) {
+            //load one lower
+            $fzz = realpath( "../" . $template_dir . $ff );
+            if ( $fzz == '' ) {
+                die( 'Failed to find ' . "../" . $template_dir . $ff . " AKA '" . $fzz . "'" );
+            }
+        } else if ( $bk == 'full' ) {
+            //pass FULL path
+            $fzz = realpath( $ff );
+            if ( $fzz == '' ) {
+                die( 'Failed to find ' . $ff . " AKA " . $fzz );
+            }
+        } else {
+            $fzz = realpath( $template_dir . $ff );
+            if ( $fzz == '' ) {
+                die( 'Failed to find ' . $template_dir . $ff );
+            }
+        }
+        $r = file_get_contents( $fzz );
+        if ( $r === false ) {
+            die( 'Error with ' . $template_dir . $ff . ' :: ' . realpath( $template_dir ) . ' :: ' . $fzz );
+        }
+        if ( isset( $_SESSION[ 'debug' ] ) && ( $_SESSION[ 'debug' ] >= 2 ) ) {
+            $r = "\n<!--==START " . $fzz . "==-->\n" . $r . "\n<!--==END " . $fzz . "==-->\n";
+        }
+        return $r;
+    }
     function clean_tempalte( $s ) {
-        $before            = strlen( $s );
-        $ars               = array( );
-        $ars[ '      ' ]   = ' ';
-        $ars[ '        ' ] = ' ';
-        $ars[ "\n\n" ]     = "\n";
+        global $_js_ver;
+        $before             = strlen( $s );
+        $ars                = array( );
+        $ars[ '      ' ]    = ' ';
+        $ars[ '        ' ]  = ' ';
+        $ars[ "\n\n" ]      = "\n";
         //
         //make them unreadable
         //
         //   $ars[ "\n" ]       = '';
         ##
-        $ars[ "\t" ]       = ' ';
-        $ars[ '  ' ]       = ' ';
-        $ars[ '; ' ]       = ';';
-        $ars[ '" >' ]      = '">';
-        $ars[ ' </' ]      = '</';
-        $ars[ "' >" ]      = "'>";
-        $ars[ "  <" ]      = " <";
-        $ars[ "\n<td" ]    = "<td";
-        $ars[ "\n</tr" ]   = "</tr";
-        $ars[ "//FK//" ]   = "";
+        $ars[ "\t" ]        = '';
+        $ars[ '  ' ]        = ' ';
+        $ars[ '; ' ]        = ';';
+        $ars[ '" >' ]       = '">';
+        $ars[ ' </' ]       = '</';
+        $ars[ "' >" ]       = "'>";
+        $ars[ "  <" ]       = " <";
+        $ars[ "\n<td" ]     = "<td";
+        $ars[ "\n " ]       = "\n";
+        $ars[ "\n</tr" ]    = "</tr";
+        $ars[ "\n<option" ] = "<option";
+        $ars[ '.js">' ]     = '.js' . $_js_ver . '">';
+        $ars[ '.css">' ]    = '.css' . $_js_ver . '">';
+        $ars[ '.css"/>' ]   = '.css' . $_js_ver . '"/>';
+        $ars[ '.css" ' ]    = '.css' . $_js_ver . '" ';
+        $ars[ "//FK//" ]    = "";
         foreach ( $ars as $f => $t ) {
             $n = 1;
             while ( $n ) {
                 $s = str_replace( $f, $t, $s, $n );
             }
         }
-        if ( isset( $_SESSION[ 'debug' ] ) && ( $_SESSION[ 'debug' ] == 1 ) ) {
+        if ( isset( $_SESSION[ 'debug' ] ) && ( $_SESSION[ 'debug' ] == 1 ) && ( !isset( $_GET[ 'aspdf' ] ) ) ) {
             $s     = str_replace( "<!--", "\n<!--", $s );
             $s     = str_replace( "-->", "-->\n", $s );
             $after = strlen( $s );
@@ -87,20 +124,34 @@
         return $s;
     }
     function smart_template( $s, $ar, $looped = false ) {
+        $st = microtime( true );
         global $_HOST_;
-        $ar[ '_HOST_' ] = $_HOST_;
-        if ( isset( $_SESSION[ 'debug' ] ) && ( $_SESSION[ 'debug' ] >= 3 ) ) {
-            printr( htmlspecialchars( $s ) );
-            printhtmlspecialchars( $ar );
+        global $_IMG_;
+        global $_js_ver;
+        global $_TITLE_;
+        global $_SITE_;
+        $ar[ '_HOST_' ]  = $_HOST_;
+        $ar[ '_IMG_' ]   = $_IMG_;
+        $ar[ 'js_ver' ]  = $_js_ver;
+        $ar[ '_TITLE_' ] = $_TITLE_;
+        $ar[ '_SITE_' ]  = $_SITE_;
+        if ( isset( $ar[ 'js_vars' ] ) && is_array( $ar[ 'js_vars' ] ) ) {
+            $js_vars = array( );
+            foreach ( $ar[ 'js_vars' ] as $kk => $vv ) {
+                $js_vars[ ] = "var " . $kk . ' = ' . json_encode( $vv ) . ';';
+            }
+            $ar[ 'js_vars' ] = implode( "\n", $js_vars );
         }
         foreach ( $ar as $kk => $vv ) {
             //            echo "\n<br>:".$kk.":".$vv;
             if ( is_array( $vv ) ) {
-                $vv = implode( '', $vv );
+                $vv = multi_implode( '', $vv );
             }
             $s = str_replace( "{" . $kk . "}", $vv, $s );
         }
-        $s = clean_tempalte( $s );
+        if ( $looped !== -5 ) {
+            $s = clean_tempalte( $s );
+        }
         $n = 1;
         while ( $n ) {
             $s = str_replace( " </", '</', $s, $n );
@@ -111,7 +162,11 @@
             }
         }
         $sk = md5( $s );
-        return "\n<!-- START $sk -->\n" . $s . "\n<!-- END $sk -->\n";
+        if ( isset( $_SESSION[ 'debug' ] ) && ( $_SESSION[ 'debug' ] >= 2 ) ) {
+            return "\n<!-- START $sk -->\n" . $s . "\n<!-- END $sk t:" . number_format( ( microtime( true ) - $st ), 7 ) . "-->\n";
+        } else {
+            return $s;
+        }
     }
     function ulli_implode( $a ) {
         return '<ul><li>' . implode( '</li><li>', $a ) . '</li></ul>';
